@@ -64,31 +64,41 @@ function extractFirstNumber(text: string, pattern: RegExp, fallback: number): nu
   return Number.isNaN(parsed) ? fallback : parsed;
 }
 
+function countKeywordMatches(text: string, pattern: RegExp): number {
+  const matches = text.match(pattern);
+  return matches ? matches.length : 0;
+}
+
 function classifyLocallyDeterministic(redactedText: string): StructuredTriagePayload {
   const lower = redactedText.toLowerCase();
 
-  const hasMedical =
-    /fracture|bleeding|trauma|patient|victim|casualt|wound|oxygen|respiratory|tourniquet|ambulance|luka|patah/.test(
-      lower
-    );
-  const hasInfra =
-    /bridge|collapse|road|blocked|impassable|landslide|abutment|washout|rerout|debris|jembatan/.test(
-      lower
-    );
-  const hasSos =
-    /sos|trapped|rooftop|evacuat|boat|rising|mudflow|stranded|terjebak|ataps?/.test(
-      lower
-    );
-  const hasLogistics =
-    /shelter|water|blanket|fuel|diesel|generator|formula|food|supply|logistics|posko|inventory/.test(
-      lower
-    );
+  const scores: Record<IncidentCategory, number> = {
+    MEDICAL: countKeywordMatches(
+      lower,
+      /\b(?:fracture|bleeding|trauma|patient|victim|casualt\w*|wound\w*|oxygen|respiratory|tourniquet|luka|patah)\b/g
+    ),
+    INFRASTRUCTURE: countKeywordMatches(
+      lower,
+      /\b(?:bridge|collapse\w*|road|blocked|blocking|impassable|landslide|abutment|washout|rerout\w*|debris|jembatan)\b/g
+    ),
+    EVACUATION_SOS: countKeywordMatches(
+      lower,
+      /\b(?:sos|trapped|rooftop|evacuat\w*|boat|mudflow|stranded|terjebak|ataps?)\b/g
+    ),
+    LOGISTICS: countKeywordMatches(
+      lower,
+      /\b(?:shelter|water|blanket\w*|fuel|diesel|generator|formula|food|suppl\w*|logistics|posko|inventory)\b/g
+    ),
+  };
 
   let category: IncidentCategory = 'LOGISTICS';
-  if (hasSos && !hasMedical) category = 'EVACUATION_SOS';
-  else if (hasMedical) category = 'MEDICAL';
-  else if (hasInfra) category = 'INFRASTRUCTURE';
-  else if (hasLogistics) category = 'LOGISTICS';
+  let bestScore = -1;
+  for (const key of Object.keys(scores) as IncidentCategory[]) {
+    if (scores[key] > bestScore) {
+      bestScore = scores[key];
+      category = key;
+    }
+  }
 
   const isCritical =
     /critical|arterial|bleeding|trapped|rooftop|sos|collapsed|immediately|respiratory|infant|elderly/.test(

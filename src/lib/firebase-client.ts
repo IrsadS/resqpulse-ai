@@ -1,5 +1,9 @@
 import { getApps, initializeApp, type FirebaseApp } from 'firebase/app';
-import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check';
+import {
+  initializeAppCheck,
+  ReCaptchaEnterpriseProvider,
+  ReCaptchaV3Provider,
+} from 'firebase/app-check';
 import { getAuth, signInAnonymously } from 'firebase/auth';
 import {
   collection,
@@ -53,10 +57,13 @@ export function getFirebaseApp(): FirebaseApp | null {
     !appCheckInitialized &&
     process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY
   ) {
+    const provider =
+      process.env.NEXT_PUBLIC_RECAPTCHA_PROVIDER === 'enterprise'
+        ? new ReCaptchaEnterpriseProvider(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY)
+        : new ReCaptchaV3Provider(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY);
+
     initializeAppCheck(cachedApp, {
-      provider: new ReCaptchaEnterpriseProvider(
-        process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY
-      ),
+      provider,
       isTokenAutoRefreshEnabled: true,
     });
     appCheckInitialized = true;
