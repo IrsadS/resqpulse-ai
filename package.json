@@ -1,0 +1,30 @@
+{
+  "name": "resqpulse-ai",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ResQPulse AI - Unified Crisis, Medical Triage, Evacuation SOS, and Field Logistics Hybrid AI Workspace for Google Firebase #BuildHybridAI 2026",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "verify": "node scripts/verify-hybrid-engine.mjs"
+  },
+  "dependencies": {
+    "firebase": "latest",
+    "leaflet": "^1.9.4",
+    "lucide-react": "^0.511.0",
+    "next": "^15.3.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.0",
+    "@types/leaflet": "^1.9.16",
+    "@types/node": "^22.13.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "tailwindcss": "^4.1.0",
+    "typescript": "^5.8.0"
+  }
+}

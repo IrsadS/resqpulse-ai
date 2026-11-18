@@ -1,0 +1,27 @@
+# Dependencies & build artifacts
+node_modules/
+.next/
+out/
+tsconfig.tsbuildinfo
+npm-debug.log*
+.DS_Store
+
+# Environment & credentials
+.env
+.env*.local
+
+# Agent, knowledge graph & internal docs
+.codegraph/
+.graphify/
+graphify-out/
+.agents/
+.gemini/
+AGENTS.md
+CLAUDE.md
+SKILL.md
+
+# Local testing & verification artifacts
+.tmp-verify/
+scripts/
+*.test.*
+*.spec.*
