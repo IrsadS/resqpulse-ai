@@ -2,7 +2,12 @@
 
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
-import type { IncidentCategory, IncidentReport, TriageSeverity } from '@/types/incident';
+import type {
+  IncidentCategory,
+  IncidentReport,
+  InferenceSourceType,
+  TriageSeverity,
+} from '@/types/incident';
 
 interface TacticalMapProps {
   incidents: IncidentReport[];
@@ -15,6 +20,12 @@ const SEVERITY_COLORS: Record<TriageSeverity, string> = {
   HIGH: '#D97706',
   MEDIUM: '#2563EB',
   LOW: '#15803D',
+};
+
+const SOURCE_BADGE_COLORS: Record<InferenceSourceType, string> = {
+  ON_DEVICE: '#15803D',
+  IN_CLOUD: '#1D4ED8',
+  SIMULATED: '#B45309',
 };
 
 const CATEGORY_SHORT_TAG: Record<IncidentCategory, string> = {
@@ -75,6 +86,7 @@ export default function TacticalMap({
 
     incidents.forEach((incident) => {
       const color = SEVERITY_COLORS[incident.severity];
+      const sourceColor = SOURCE_BADGE_COLORS[incident.inferenceSource];
       const isSelected = incident.id === selectedIncidentId;
       const tag = CATEGORY_SHORT_TAG[incident.category];
 
@@ -123,7 +135,7 @@ export default function TacticalMap({
             ${safeSummary}
           </div>
           <div style="font-size:11px;color:#475569;font-family:monospace;">
-            Road: ${safeRoad} | AI: ${safeSource}
+            Road: ${safeRoad} | <span style="color:${sourceColor};font-weight:700;">${safeSource}</span>
           </div>
         </div>`
       );
@@ -152,16 +164,16 @@ export default function TacticalMap({
         <span className="font-semibold">Tactical Corridor Map (Merapi - Central Java)</span>
         <div className="flex flex-wrap items-center gap-3 font-mono text-xs">
           <span className="inline-flex items-center gap-1">
-            <span className="h-2.5 w-2.5 rounded-full bg-[#DC2626]" /> CRITICAL
+            <span className="h-2.5 w-2.5 rounded-full bg-[#DC2626]" /> Critical
           </span>
           <span className="inline-flex items-center gap-1">
-            <span className="h-2.5 w-2.5 rounded-full bg-[#D97706]" /> HIGH
+            <span className="h-2.5 w-2.5 rounded-full bg-[#D97706]" /> High
           </span>
           <span className="inline-flex items-center gap-1">
-            <span className="h-2.5 w-2.5 rounded-full bg-[#2563EB]" /> MEDIUM
+            <span className="h-2.5 w-2.5 rounded-full bg-[#2563EB]" /> Medium
           </span>
           <span className="inline-flex items-center gap-1">
-            <span className="h-2.5 w-2.5 rounded-full bg-[#15803D]" /> LOW
+            <span className="h-2.5 w-2.5 rounded-full bg-[#15803D]" /> Low
           </span>
         </div>
       </div>

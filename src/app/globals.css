@@ -8,18 +8,30 @@
   --color-muted: #E9EEF6;
   --color-muted-foreground: #475569;
   --color-primary: #1E40AF;
+  --color-primary-hover: #1E3A8A;
   --color-border: #CBD5E1;
   --color-critical: #B91C1C;
   --color-warning: #B45309;
   --color-on-device: #15803D;
+  --color-in-cloud: #1D4ED8;
+  --color-simulated: #B45309;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
+html,
 body {
+  overflow-x: clip;
   background-color: var(--color-background);
   color: var(--color-foreground);
   font-family: var(--font-fira-sans), system-ui, -apple-system, sans-serif;
   line-height: 1.5;
-  overflow-x: hidden;
+  caret-color: var(--color-primary);
+}
+
+::selection {
+  background-color: #DBEAFE;
+  color: #0F172A;
 }
 
 .font-mono,
@@ -31,8 +43,45 @@ pre,
 }
 
 *:focus-visible {
-  outline: 3px solid #1E40AF;
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
+}
+
+.btn-tactile {
+  transition:
+    transform 160ms var(--ease-out),
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease;
+}
+
+.btn-tactile:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.interactive-card {
+  transition:
+    border-color 160ms var(--ease-out),
+    background-color 160ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .interactive-card:hover {
+    border-color: #94A3B8;
+  }
+}
+
+.surface-enter {
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity 200ms var(--ease-out),
+    transform 200ms var(--ease-out);
+
+  @starting-style {
+    opacity: 0;
+    transform: translateY(6px);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

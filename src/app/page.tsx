@@ -1,11 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { FlaskConical, RotateCcw } from 'lucide-react';
 import { CommandCenterPanel } from '@/components/CommandCenterPanel';
 import { FieldResponderPanel } from '@/components/FieldResponderPanel';
 import { HybridArchitectureModal } from '@/components/HybridArchitectureModal';
 import { TacticalHeader } from '@/components/TacticalHeader';
 import {
+  ensureAnonymousSession,
   isFirebaseConfigured,
   persistIncidentToFirestore,
 } from '@/lib/firebase-client';
@@ -28,7 +30,11 @@ export default function HomePage() {
   const [firebaseLiveConfigured, setFirebaseLiveConfigured] = useState(false);
 
   useEffect(() => {
-    setFirebaseLiveConfigured(isFirebaseConfigured());
+    const configured = isFirebaseConfigured();
+    setFirebaseLiveConfigured(configured);
+    if (configured) {
+      void ensureAnonymousSession();
+    }
 
     try {
       const saved = window.localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -39,7 +45,7 @@ export default function HomePage() {
         }
       }
     } catch {
-      // Ignore invalid local storage state and keep default incidents.
+      // Ignore invalid local storage state and keep default synthetic dataset.
     }
 
     const handleOnline = () => setIsOnline(true);
@@ -63,6 +69,11 @@ export default function HomePage() {
     } catch {
       // Storage quota fallback: keep state in memory.
     }
+  }
+
+  function handleResetDemoData() {
+    setIncidents(INITIAL_INCIDENTS);
+    saveLocalCache(INITIAL_INCIDENTS);
   }
 
   async function handleReportCreated(report: IncidentReport) {
@@ -132,6 +143,25 @@ export default function HomePage() {
         queuedCount={queuedCount}
         onOpenArchitectureModal={() => setIsModalOpen(true)}
       />
+
+      <div className="border-b border-amber-200 bg-[#FFFBEB]">
+        <div className="mx-auto flex max-w-[1600px] flex-wrap items-center justify-between gap-2 px-4 py-2 text-xs text-[#92400E]">
+          <div className="flex items-center gap-2 font-medium">
+            <FlaskConical className="h-3.5 w-3.5 shrink-0 text-[#B45309]" aria-hidden="true" />
+            <span>
+              Demo scenario, synthetic data: Mount Merapi crisis exercise (pre-loaded sample reports are fictional).
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={handleResetDemoData}
+            className="btn-tactile inline-flex min-h-[32px] cursor-pointer items-center gap-1.5 rounded border border-amber-300 bg-white px-2.5 text-xs font-semibold text-[#B45309] hover:bg-amber-100"
+          >
+            <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
+            <span>Reset Demo Data</span>
+          </button>
+        </div>
+      </div>
 
       <main className="mx-auto max-w-[1600px] p-4">
         {viewMode === 'SPLIT_SIMULATOR' && (

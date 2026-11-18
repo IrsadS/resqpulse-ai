@@ -6,7 +6,7 @@ import {
   AlertTriangle,
   Camera,
   Cloud,
-  Cpu,
+  FlaskConical,
   ImagePlus,
   RefreshCw,
   Route,
@@ -14,6 +14,7 @@ import {
   Sparkles,
   Truck,
 } from 'lucide-react';
+import { InferenceSourceBadge } from '@/components/InferenceSourceBadge';
 import {
   generateCommandBriefingCloud,
   runCloudMultimodalAnalysis,
@@ -160,7 +161,7 @@ export function CommandCenterPanel({
             Command Center &amp; Tactical Map
           </h2>
           <p className="text-xs text-slate-600">
-            Firestore offline-synced incident feed with Cloud Gemini Flash multimodal &amp; dispatch synthesis
+            Firestore offline-synced incident feed with cloud multimodal &amp; dispatch synthesis
           </p>
         </div>
 
@@ -168,7 +169,7 @@ export function CommandCenterPanel({
           type="button"
           onClick={handleGenerateBriefing}
           disabled={isGeneratingBriefing || incidents.length === 0}
-          className="inline-flex min-h-[48px] cursor-pointer items-center gap-2 rounded-lg bg-[#1E40AF] px-4 text-xs font-bold text-white transition-colors hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60"
+          className="btn-tactile inline-flex min-h-[48px] cursor-pointer items-center gap-2 rounded-lg bg-[#1E40AF] px-4 text-xs font-bold text-white hover:bg-[#1E3A8A] disabled:cursor-not-allowed disabled:opacity-60"
         >
           <Sparkles className="h-4 w-4" aria-hidden="true" />
           <span>
@@ -180,7 +181,7 @@ export function CommandCenterPanel({
       </div>
 
       {queuedCount > 0 && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-300 bg-amber-50 px-3.5 py-2.5 text-xs">
+        <div className="surface-enter flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-300 bg-[#FFFBEB] px-3.5 py-2.5 text-xs">
           <div className="flex items-center gap-2 font-semibold text-[#B45309]">
             <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />
             <span>
@@ -191,7 +192,7 @@ export function CommandCenterPanel({
             type="button"
             onClick={handleSyncClick}
             disabled={!isOnline || isSyncing}
-            className="inline-flex min-h-[40px] cursor-pointer items-center gap-1.5 rounded-md bg-[#B45309] px-3 text-xs font-bold text-white hover:bg-amber-800 disabled:cursor-not-allowed disabled:opacity-50"
+            className="btn-tactile inline-flex min-h-[40px] cursor-pointer items-center gap-1.5 rounded-md bg-[#B45309] px-3 text-xs font-bold text-white hover:bg-amber-800 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <RefreshCw
               className={`h-3.5 w-3.5 ${isSyncing ? 'animate-spin' : ''}`}
@@ -215,16 +216,25 @@ export function CommandCenterPanel({
       {briefing && (
         <div
           aria-live="polite"
-          className="space-y-3 rounded-xl border border-blue-200 bg-blue-50/70 p-4"
+          className="surface-enter space-y-3 rounded-xl border border-blue-200 bg-[#EFF6FF]/75 p-4"
         >
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-blue-200 pb-2">
             <div className="flex items-center gap-2 text-sm font-bold text-[#1E3A8A]">
-              <Cloud className="h-4 w-4 text-[#1E40AF]" aria-hidden="true" />
-              <span>AI Command Operation Plan (ONLY_IN_CLOUD)</span>
+              {briefing.inferenceSource === 'IN_CLOUD' ? (
+                <Cloud className="h-4 w-4 text-[#1E40AF]" aria-hidden="true" />
+              ) : (
+                <FlaskConical className="h-4 w-4 text-[#B45309]" aria-hidden="true" />
+              )}
+              <span>
+                {briefing.inferenceSource === 'IN_CLOUD'
+                  ? 'AI Command Operation Plan (Cloud)'
+                  : 'Simulated Command Operation Plan'}
+              </span>
             </div>
-            <span className="rounded bg-blue-100 px-2 py-0.5 font-mono text-xs font-bold text-[#1D4ED8]">
-              {briefing.inferenceSource} ({briefing.latencyMs}ms)
-            </span>
+            <InferenceSourceBadge
+              source={briefing.inferenceSource}
+              latencyMs={briefing.latencyMs}
+            />
           </div>
 
           <p className="text-sm font-medium text-slate-900">
@@ -262,8 +272,8 @@ export function CommandCenterPanel({
               <table className="w-full text-left text-xs">
                 <thead className="border-b border-slate-200 bg-slate-50 text-slate-700">
                   <tr>
-                    <th className="px-3 py-2 font-semibold">Target Sector</th>
-                    <th className="px-3 py-2 font-semibold">Dispatch Resource</th>
+                    <th className="px-3 py-2 font-semibold">Target sector</th>
+                    <th className="px-3 py-2 font-semibold">Dispatch resource</th>
                     <th className="px-3 py-2 font-semibold">Priority</th>
                     <th className="px-3 py-2 font-semibold">Rationale</th>
                   </tr>
@@ -309,7 +319,7 @@ export function CommandCenterPanel({
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
             placeholder="Filter by sector, summary, or ID..."
-            className="min-h-[44px] w-full rounded-lg border border-slate-300 bg-white pl-9 pr-3 text-sm text-slate-900"
+            className="min-h-[44px] w-full rounded-lg border border-slate-300 bg-white pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-500"
           />
         </div>
 
@@ -322,7 +332,7 @@ export function CommandCenterPanel({
               type="button"
               onClick={() => setCategoryFilter(cat)}
               aria-pressed={categoryFilter === cat}
-              className={`min-h-[40px] cursor-pointer rounded-md border px-2.5 text-xs font-semibold transition-colors ${
+              className={`btn-tactile min-h-[40px] cursor-pointer rounded-md border px-2.5 text-xs font-semibold ${
                 categoryFilter === cat
                   ? 'border-[#1E40AF] bg-[#1E40AF] text-white'
                   : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100'
@@ -356,16 +366,16 @@ export function CommandCenterPanel({
               <article
                 key={incident.id}
                 onClick={() => setSelectedIncidentId(incident.id)}
-                className={`cursor-pointer rounded-lg border p-3.5 transition-colors ${
+                className={`interactive-card cursor-pointer rounded-lg border p-3.5 ${
                   isSelected
-                    ? 'border-[#1E40AF] bg-blue-50/30'
-                    : 'border-slate-200 bg-white hover:border-slate-300'
+                    ? 'border-[#1E40AF] bg-[#EFF6FF]/40'
+                    : 'border-slate-200 bg-white'
                 }`}
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex flex-wrap items-center gap-2">
                     <span
-                      className={`rounded border px-2 py-0.5 font-mono text-xs font-bold ${
+                      className={`rounded border px-2 py-0.5 font-mono text-xs font-bold tabular-nums ${
                         SEVERITY_BADGE_STYLES[incident.severity]
                       }`}
                     >
@@ -377,28 +387,23 @@ export function CommandCenterPanel({
                     <h3 className="text-sm font-bold text-slate-900">
                       {incident.sectorName}
                     </h3>
+                    {incident.isSyntheticSample && (
+                      <span className="rounded border border-slate-200 bg-slate-100 px-1.5 py-0.5 text-xs font-medium text-slate-600">
+                        Sample
+                      </span>
+                    )}
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2 font-mono text-xs">
-                    <span
-                      className={`inline-flex items-center gap-1 rounded px-2 py-0.5 font-bold ${
-                        incident.inferenceSource === 'ON_DEVICE'
-                          ? 'bg-emerald-100 text-[#15803D]'
-                          : 'bg-blue-100 text-[#1D4ED8]'
-                      }`}
-                    >
-                      {incident.inferenceSource === 'ON_DEVICE' ? (
-                        <Cpu className="h-3 w-3" aria-hidden="true" />
-                      ) : (
-                        <Cloud className="h-3 w-3" aria-hidden="true" />
-                      )}
-                      {incident.inferenceSource} ({incident.latencyMs}ms)
-                    </span>
+                    <InferenceSourceBadge
+                      source={incident.inferenceSource}
+                      latencyMs={incident.latencyMs}
+                    />
                     <span
                       className={`rounded px-2 py-0.5 font-bold ${
                         incident.syncStatus === 'SYNCED_FIRESTORE'
                           ? 'bg-slate-100 text-slate-700'
-                          : 'bg-amber-100 text-[#B45309]'
+                          : 'bg-[#FFFBEB] text-[#B45309]'
                       }`}
                     >
                       {incident.syncStatus}
@@ -414,7 +419,7 @@ export function CommandCenterPanel({
                   <span className="font-bold text-slate-900">Redacted Input: </span>
                   {incident.rawInputRedacted}
                   {incident.piiRedactedCount > 0 && (
-                    <span className="ml-2 inline-block rounded bg-emerald-100 px-1.5 py-0.5 font-bold text-[#15803D]">
+                    <span className="ml-2 inline-block rounded bg-[#F0FDF4] px-1.5 py-0.5 font-bold text-[#15803D]">
                       {incident.piiRedactedCount} PII scrubbed locally
                     </span>
                   )}
@@ -439,7 +444,7 @@ export function CommandCenterPanel({
                       handleAnalyzePhoto(incident);
                     }}
                     disabled={analyzingPhotoId === incident.id}
-                    className="inline-flex min-h-[40px] cursor-pointer items-center gap-1.5 rounded-md border border-blue-300 bg-blue-50 px-3 text-xs font-bold text-[#1D4ED8] hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="btn-tactile inline-flex min-h-[40px] cursor-pointer items-center gap-1.5 rounded-md border border-blue-300 bg-[#EFF6FF] px-3 text-xs font-bold text-[#1D4ED8] hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {incident.photoDataUrl ? (
                       <Camera className="h-3.5 w-3.5" aria-hidden="true" />
@@ -450,8 +455,8 @@ export function CommandCenterPanel({
                       {analyzingPhotoId === incident.id
                         ? 'Analyzing Photo...'
                         : incident.photoDataUrl
-                        ? 'Analyze Photo (Cloud Flash)'
-                        : 'Capture & Analyze (Cloud Flash)'}
+                        ? 'Analyze Photo (Cloud)'
+                        : 'Capture & Analyze Photo'}
                     </span>
                   </button>
                 </div>
@@ -469,9 +474,9 @@ export function CommandCenterPanel({
                 )}
 
                 {incident.cloudMultimodalAssessment && (
-                  <div className="mt-2.5 rounded-md border border-blue-200 bg-blue-50 p-2.5 text-xs text-slate-800">
+                  <div className="mt-2.5 rounded-md border border-blue-200 bg-[#EFF6FF] p-2.5 text-xs text-slate-800">
                     <span className="font-bold text-[#1D4ED8]">
-                      Multimodal Visual Assessment:{' '}
+                      Visual Assessment:{' '}
                     </span>
                     {incident.cloudMultimodalAssessment}
                   </div>

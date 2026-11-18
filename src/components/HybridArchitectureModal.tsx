@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { Cloud, Cpu, Lock, X } from 'lucide-react';
+import { Cloud, Cpu, FlaskConical, Lock, X } from 'lucide-react';
 
 interface HybridArchitectureModalProps {
   isOpen: boolean;
@@ -38,7 +38,7 @@ export function HybridArchitectureModal({
       onClick={onClose}
     >
       <div
-        className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-slate-200 bg-white p-6 shadow-xl"
+        className="surface-enter max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-slate-200 bg-white p-6 shadow-xl"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-4 border-b border-slate-200 pb-4">
@@ -47,10 +47,10 @@ export function HybridArchitectureModal({
               id="hybrid-modal-title"
               className="text-xl font-bold text-slate-900"
             >
-              Firebase AI Logic Hybrid Inference Architecture
+              Firebase AI Logic Hybrid Inference Guide
             </h2>
             <p className="mt-1 text-sm text-slate-600">
-              How ResQPulse AI combines Gemini Nano (On-Device) and Gemini Flash (Cloud) using firebase/ai.
+              How ResQPulse AI routes tasks across Gemini Nano (on-device), Gemini Flash (cloud), and transparent fallback simulation.
             </p>
           </div>
           <button
@@ -58,61 +58,57 @@ export function HybridArchitectureModal({
             type="button"
             onClick={onClose}
             aria-label="Close modal"
-            className="inline-flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100"
+            className="btn-tactile inline-flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100"
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
 
-        <div className="mt-5 space-y-4 text-sm text-slate-800">
-          <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+        <div className="mt-5 space-y-3 text-sm text-slate-800">
+          <div className="rounded-lg border border-emerald-200 bg-[#F0FDF4] p-4">
             <div className="flex items-center gap-2 font-bold text-[#15803D]">
               <Lock className="h-4 w-4" aria-hidden="true" />
-              <span>1. ONLY_ON_DEVICE (Strict Privacy &amp; Zero-Signal Guard)</span>
+              <span>ON_DEVICE &amp; Privacy Guard (ONLY_ON_DEVICE)</span>
             </div>
             <p className="mt-1 text-slate-700">
-              Scrubs Indonesian NIK, phone numbers, and patient names locally before persistence or cloud escalation. Zero personal data leaves the device.
+              Scrubs Indonesian NIK, phone numbers, and patient names locally before storage or cloud escalation. When Chrome Built-in AI (Gemini Nano) runs triage locally, the badge displays <code>ON_DEVICE</code>.
             </p>
           </div>
 
-          <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+          <div className="rounded-lg border border-blue-200 bg-[#EFF6FF] p-4">
             <div className="flex items-center gap-2 font-bold text-[#1D4ED8]">
-              <Cpu className="h-4 w-4" aria-hidden="true" />
-              <span>2. PREFER_ON_DEVICE (Instant Field Triage + Seamless Cloud Fallback)</span>
+              <Cloud className="h-4 w-4" aria-hidden="true" />
+              <span>IN_CLOUD (PREFER_ON_DEVICE fallback &amp; ONLY_IN_CLOUD)</span>
             </div>
             <p className="mt-1 text-slate-700">
-              Runs structured triage classification (MEDICAL, INFRASTRUCTURE, EVACUATION_SOS, LOGISTICS) locally on Gemini Nano when supported, and falls back to Cloud Gemini Flash on unsupported hardware when online.
+              When Chrome lacks local Gemini Nano or Command Center escalates a field photo/SitRep, <code>firebase/ai</code> falls back to cloud inference and reports <code>IN_CLOUD</code> via <code>result.response.inferenceSource</code>.
             </p>
           </div>
 
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+          <div className="rounded-lg border border-amber-200 bg-[#FFFBEB] p-4">
             <div className="flex items-center gap-2 font-bold text-[#B45309]">
-              <Cloud className="h-4 w-4" aria-hidden="true" />
-              <span>3. ONLY_IN_CLOUD (Multimodal Image Analysis &amp; Multi-Sector SitRep)</span>
+              <FlaskConical className="h-4 w-4" aria-hidden="true" />
+              <span>SIMULATED (Offline / Unconfigured Fallback)</span>
             </div>
             <p className="mt-1 text-slate-700">
-              Command Center coordinators escalate redacted reports and disaster field photos to Gemini Flash to evaluate structural bridge collapse and coordinate multi-sector convoy routing.
+              If Firebase environment keys are not configured yet or an offline device lacks Chrome Gemini Nano flags, the local deterministic classifier handles triage cleanly and explicitly displays <code>SIMULATED</code> with genuine elapsed timing.
             </p>
           </div>
 
           <div className="rounded-lg border border-slate-200 bg-slate-900 p-4 text-xs text-slate-100">
-            <p className="mb-2 font-semibold text-slate-300">
-              Judge 3-Step Demo Checklist:
-            </p>
+            <div className="mb-2 flex items-center gap-2 font-semibold text-slate-300">
+              <Cpu className="h-4 w-4 text-emerald-400" aria-hidden="true" />
+              <span>Enabling Real On-Device Gemini Nano in Chrome Desktop:</span>
+            </div>
             <ol className="list-decimal space-y-1 pl-4">
               <li>
-                Click <strong>Signal: OFFLINE (Blackout)</strong> in the header, select the{' '}
-                <strong>Medical + PII</strong> preset, and submit. Observe PII redaction,{' '}
-                <code>ON_DEVICE</code> badge, and <code>QUEUED_OFFLINE</code> status.
+                Open <code>chrome://flags/#optimization-guide-on-device-model</code> and set to <strong>Enabled BypassPerfRequirement</strong>.
               </li>
               <li>
-                Switch signal back to <strong>ONLINE</strong> and click{' '}
-                <strong>Sync Queued Reports Now</strong> to flush offline Firestore queue.
+                Open <code>chrome://flags/#prompt-api-for-gemini-nano</code> and set to <strong>Enabled</strong>, then relaunch Chrome.
               </li>
               <li>
-                Select a report with a photo and click{' '}
-                <strong>Analyze Photo (Cloud Flash)</strong>, then click{' '}
-                <strong>Generate Multi-Sector Operation Plan</strong> to see unified dispatch routing.
+                Fill <code>.env.local</code> with your Firebase Web SDK keys (with Firebase AI Logic, Anonymous Auth, and Firestore enabled).
               </li>
             </ol>
           </div>
@@ -122,7 +118,7 @@ export function HybridArchitectureModal({
           <button
             type="button"
             onClick={onClose}
-            className="min-h-[48px] cursor-pointer rounded-lg bg-[#1E40AF] px-5 text-sm font-semibold text-white hover:bg-blue-900"
+            className="btn-tactile min-h-[48px] cursor-pointer rounded-lg bg-[#1E40AF] px-5 text-sm font-semibold text-white hover:bg-[#1E3A8A]"
           >
             Return to Workspace
           </button>

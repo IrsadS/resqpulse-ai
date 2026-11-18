@@ -1,5 +1,6 @@
 import { getApps, initializeApp, type FirebaseApp } from 'firebase/app';
 import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check';
+import { getAuth, signInAnonymously } from 'firebase/auth';
 import {
   collection,
   doc,
@@ -14,6 +15,7 @@ import type { IncidentReport } from '@/types/incident';
 let cachedApp: FirebaseApp | null = null;
 let cachedDb: Firestore | null = null;
 let appCheckInitialized = false;
+let anonymousAuthPromise: Promise<string | null> | null = null;
 
 export function isFirebaseConfigured(): boolean {
   return Boolean(
@@ -86,6 +88,29 @@ export function getFirestoreDb(): Firestore | null {
   return cachedDb;
 }
 
+export async function ensureAnonymousSession(): Promise<string | null> {
+  const app = getFirebaseApp();
+  if (!app || typeof window === 'undefined') {
+    return null;
+  }
+
+  const auth = getAuth(app);
+  if (auth.currentUser) {
+    return auth.currentUser.uid;
+  }
+
+  if (!anonymousAuthPromise) {
+    anonymousAuthPromise = signInAnonymously(auth)
+      .then((cred) => cred.user.uid)
+      .catch(() => null)
+      .finally(() => {
+        anonymousAuthPromise = null;
+      });
+  }
+
+  return anonymousAuthPromise;
+}
+
 export async function persistIncidentToFirestore(
   incident: IncidentReport
 ): Promise<boolean> {
@@ -94,9 +119,12 @@ export async function persistIncidentToFirestore(
     return false;
   }
 
+  await ensureAnonymousSession();
+
   const ref = doc(collection(db, 'incidents'), incident.id);
+  const { isSyntheticSample: _omitSampleFlag, ...persistable } = incident;
   await setDoc(ref, {
-    ...incident,
+    ...persistable,
     syncStatus: 'SYNCED_FIRESTORE',
   });
   return true;

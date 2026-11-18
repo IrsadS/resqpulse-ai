@@ -39,7 +39,8 @@ interface StructuredTriagePayload {
   accessRoadStatus: RoadAccessStatus;
 }
 
-const CLOUD_MODEL_NAME = 'gemini-2.5-flash';
+const DEFAULT_CLOUD_MODEL =
+  process.env.NEXT_PUBLIC_FIREBASE_CLOUD_MODEL || 'gemini-3.5-flash-lite';
 
 function toSdkInferenceMode(mode: InferenceModeSetting): InferenceMode {
   if (mode === 'ONLY_ON_DEVICE') return InferenceMode.ONLY_ON_DEVICE;
@@ -49,11 +50,11 @@ function toSdkInferenceMode(mode: InferenceModeSetting): InferenceMode {
 
 function mapSdkInferenceSource(
   source: InferenceSource | undefined,
-  fallbackSource: InferenceSourceType
+  fallbackIfUnmarked: InferenceSourceType
 ): InferenceSourceType {
   if (source === InferenceSource.IN_CLOUD) return 'IN_CLOUD';
   if (source === InferenceSource.ON_DEVICE) return 'ON_DEVICE';
-  return fallbackSource;
+  return fallbackIfUnmarked;
 }
 
 function extractFirstNumber(text: string, pattern: RegExp, fallback: number): number {
@@ -195,8 +196,7 @@ export async function analyzeFieldReportHybrid(
   const redaction = redactSensitivePii(params.rawText);
 
   let structured: StructuredTriagePayload | null = null;
-  let actualSource: InferenceSourceType =
-    params.inferenceMode === 'ONLY_IN_CLOUD' ? 'IN_CLOUD' : 'ON_DEVICE';
+  let actualSource: InferenceSourceType = 'SIMULATED';
 
   const firebaseApp = getFirebaseApp();
   if (firebaseApp && (params.isOnline || params.inferenceMode !== 'ONLY_IN_CLOUD')) {
@@ -204,7 +204,7 @@ export async function analyzeFieldReportHybrid(
       const ai = getAI(firebaseApp, { backend: new GoogleAIBackend() });
       const model = getGenerativeModel(ai, {
         mode: toSdkInferenceMode(params.inferenceMode),
-        inCloudParams: { model: CLOUD_MODEL_NAME },
+        inCloudParams: { model: DEFAULT_CLOUD_MODEL },
       });
 
       const prompt = [
@@ -224,14 +224,15 @@ export async function analyzeFieldReportHybrid(
         structured = parsed;
         actualSource = mapSdkInferenceSource(
           result.response.inferenceSource,
-          params.inferenceMode === 'ONLY_IN_CLOUD' ? 'IN_CLOUD' : 'ON_DEVICE'
+          params.inferenceMode === 'ONLY_IN_CLOUD'
+            ? 'IN_CLOUD'
+            : params.inferenceMode === 'ONLY_ON_DEVICE'
+            ? 'ON_DEVICE'
+            : 'SIMULATED'
         );
       }
     } catch (error) {
-      if (params.inferenceMode === 'ONLY_ON_DEVICE' && !params.isOnline) {
-        // Offline local classifier handles browser environments without Chrome built-in Gemini Nano flags.
-        actualSource = 'ON_DEVICE';
-      } else if (params.inferenceMode === 'ONLY_IN_CLOUD' && !params.isOnline) {
+      if (params.inferenceMode === 'ONLY_IN_CLOUD' && !params.isOnline) {
         throw error;
       }
     }
@@ -239,20 +240,10 @@ export async function analyzeFieldReportHybrid(
 
   if (!structured) {
     structured = classifyLocallyDeterministic(redaction.redactedText);
-    if (params.inferenceMode === 'ONLY_IN_CLOUD') {
-      actualSource = 'IN_CLOUD';
-    } else if (params.inferenceMode === 'ONLY_ON_DEVICE') {
-      actualSource = 'ON_DEVICE';
-    } else {
-      // PREFER_ON_DEVICE runs locally on Gemini Nano offline or on capable hardware; simulates fallback only if cloud needed.
-      actualSource = 'ON_DEVICE';
-    }
+    actualSource = 'SIMULATED';
   }
 
-  const elapsedMs = Math.max(
-    actualSource === 'ON_DEVICE' ? 24 : 310,
-    Math.round(performance.now() - startedAt)
-  );
+  const elapsedMs = Math.max(1, Math.round(performance.now() - startedAt));
 
   return {
     id: `INC-${Date.now().toString().slice(-6)}`,
@@ -307,7 +298,7 @@ export async function runCloudMultimodalAnalysis(
       const ai = getAI(firebaseApp, { backend: new GoogleAIBackend() });
       const cloudModel = getGenerativeModel(ai, {
         mode: InferenceMode.ONLY_IN_CLOUD,
-        inCloudParams: { model: CLOUD_MODEL_NAME },
+        inCloudParams: { model: DEFAULT_CLOUD_MODEL },
       });
 
       const result = await cloudModel.generateContent([
@@ -318,28 +309,28 @@ export async function runCloudMultimodalAnalysis(
       return {
         assessment: result.response.text().trim(),
         inferenceSource: mapSdkInferenceSource(result.response.inferenceSource, 'IN_CLOUD'),
-        latencyMs: Math.max(380, Math.round(performance.now() - startedAt)),
+        latencyMs: Math.max(1, Math.round(performance.now() - startedAt)),
       };
     } catch {
-      // Fall back to deterministic cloud assessment if Firebase API key is not live yet.
+      // Fall back to deterministic simulator assessment when live Firebase AI fails or is unconfigured.
     }
   }
 
   const assessmentsByCategory: Record<IncidentCategory, string> = {
     MEDICAL:
-      'Cloud Multimodal Assessment (Gemini Flash): Triage bay intrusion estimated at 30-40cm water depth. Recommend elevating critical patient stretchers and deploying high-clearance 4x4 ambulance.',
+      'Simulated Structural Assessment: Triage bay intrusion estimated at 30-40cm water depth. Elevate patient stretchers and stage high-clearance 4x4 ambulance.',
     INFRASTRUCTURE:
-      'Cloud Multimodal Assessment (Gemini Flash): Primary deck separation and abutment scour confirmed. Heavy emergency vehicles must avoid span; route convoys via northern Pakem bypass.',
+      'Simulated Structural Assessment: Primary deck separation and abutment scour indicated. Heavy emergency vehicles should avoid span and detour via northern Pakem bypass.',
     EVACUATION_SOS:
-      'Cloud Multimodal Assessment (Gemini Flash): Fast-moving debris-laden floodwater surrounding structure. Inflatable motorized rescue boat extraction cleared from eastern ridge.',
+      'Simulated Structural Assessment: Fast-moving debris-laden floodwater surrounding structure. Inflatable motorized rescue boat extraction recommended from eastern ridge.',
     LOGISTICS:
-      'Cloud Multimodal Assessment (Gemini Flash): Staging area accessible via dry perimeter road. Clear space detected for 2 supply trucks and portable generator offload.',
+      'Simulated Structural Assessment: Staging area accessible via dry perimeter road with clearance for 2 supply trucks and portable generator offload.',
   };
 
   return {
     assessment: assessmentsByCategory[incident.category],
-    inferenceSource: 'IN_CLOUD',
-    latencyMs: Math.max(395, Math.round(performance.now() - startedAt)),
+    inferenceSource: 'SIMULATED',
+    latencyMs: Math.max(1, Math.round(performance.now() - startedAt)),
   };
 }
 
@@ -361,7 +352,7 @@ export async function generateCommandBriefingCloud(
       const ai = getAI(firebaseApp, { backend: new GoogleAIBackend() });
       const cloudModel = getGenerativeModel(ai, {
         mode: InferenceMode.ONLY_IN_CLOUD,
-        inCloudParams: { model: CLOUD_MODEL_NAME },
+        inCloudParams: { model: DEFAULT_CLOUD_MODEL },
       });
 
       const compactFeed = incidents
@@ -388,7 +379,7 @@ export async function generateCommandBriefingCloud(
         return {
           generatedAtIso: new Date().toISOString(),
           inferenceSource: mapSdkInferenceSource(result.response.inferenceSource, 'IN_CLOUD'),
-          latencyMs: Math.max(420, Math.round(performance.now() - startedAt)),
+          latencyMs: Math.max(1, Math.round(performance.now() - startedAt)),
           executiveSitRep: parsed.executiveSitRep,
           priorityDispatchPlan: parsed.priorityDispatchPlan || [],
           routeHazardWarnings: parsed.routeHazardWarnings || [],
@@ -396,7 +387,7 @@ export async function generateCommandBriefingCloud(
         };
       }
     } catch {
-      // Fall through to deterministic synthesizer when Firebase credentials are not provided.
+      // Fall through to deterministic simulator when Firebase credentials are not provided.
     }
   }
 
@@ -447,9 +438,9 @@ export async function generateCommandBriefingCloud(
 
   return {
     generatedAtIso: new Date().toISOString(),
-    inferenceSource: 'IN_CLOUD',
-    latencyMs: Math.max(440, Math.round(performance.now() - startedAt)),
-    executiveSitRep: `Active multi-sector crisis tracking ${incidents.length} redacted field reports (${criticalCount} CRITICAL). Medical stabilization and rooftop boat extraction are prioritized along northern bypass routes due to ${blockedRoutes.length} blocked crossing(s).`,
+    inferenceSource: 'SIMULATED',
+    latencyMs: Math.max(1, Math.round(performance.now() - startedAt)),
+    executiveSitRep: `Simulated SitRep across ${incidents.length} redacted field reports (${criticalCount} CRITICAL). Medical stabilization and rooftop boat extraction are prioritized along northern bypass routes due to ${blockedRoutes.length} blocked crossing(s).`,
     priorityDispatchPlan,
     routeHazardWarnings,
     resourceAllocationMatrix,

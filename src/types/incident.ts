@@ -1,6 +1,6 @@
 export type IncidentCategory = 'MEDICAL' | 'INFRASTRUCTURE' | 'EVACUATION_SOS' | 'LOGISTICS';
 export type TriageSeverity = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
-export type InferenceSourceType = 'ON_DEVICE' | 'IN_CLOUD';
+export type InferenceSourceType = 'ON_DEVICE' | 'IN_CLOUD' | 'SIMULATED';
 export type InferenceModeSetting = 'PREFER_ON_DEVICE' | 'ONLY_ON_DEVICE' | 'ONLY_IN_CLOUD';
 export type RoadAccessStatus = 'OPEN' | 'RESTRICTED' | 'BLOCKED';
 export type SyncState = 'SYNCED_FIRESTORE' | 'QUEUED_OFFLINE';
@@ -30,6 +30,7 @@ export interface IncidentReport {
   syncStatus: SyncState;
   photoDataUrl: string | null;
   cloudMultimodalAssessment: string | null;
+  isSyntheticSample?: boolean;
 }
 
 export interface CommandBriefing {

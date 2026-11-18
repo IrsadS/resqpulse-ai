@@ -1,0 +1,56 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /incidents/{incidentId} {
+      allow read: if request.auth != null;
+
+      allow create, update: if request.auth != null
+        && incidentId.size() <= 64
+        && request.resource.data.keys().hasAll([
+          'id',
+          'createdAtIso',
+          'sectorName',
+          'latitude',
+          'longitude',
+          'rawInputRedacted',
+          'piiRedactedCount',
+          'piiRedactedTypes',
+          'category',
+          'severity',
+          'urgencyScore',
+          'structuredSummary',
+          'affectedHeadcount',
+          'vulnerableGroups',
+          'requiredResources',
+          'immediateActionChecklist',
+          'accessRoadStatus',
+          'inferenceSource',
+          'inferenceModeUsed',
+          'latencyMs',
+          'syncStatus'
+        ])
+        && request.resource.data.id == incidentId
+        && request.resource.data.category in ['MEDICAL', 'INFRASTRUCTURE', 'EVACUATION_SOS', 'LOGISTICS']
+        && request.resource.data.severity in ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW']
+        && request.resource.data.inferenceSource in ['ON_DEVICE', 'IN_CLOUD', 'SIMULATED']
+        && request.resource.data.inferenceModeUsed in ['PREFER_ON_DEVICE', 'ONLY_ON_DEVICE', 'ONLY_IN_CLOUD']
+        && request.resource.data.accessRoadStatus in ['OPEN', 'RESTRICTED', 'BLOCKED']
+        && request.resource.data.urgencyScore is number
+        && request.resource.data.urgencyScore >= 1
+        && request.resource.data.urgencyScore <= 10
+        && request.resource.data.sectorName is string
+        && request.resource.data.sectorName.size() > 0
+        && request.resource.data.sectorName.size() <= 120
+        && request.resource.data.rawInputRedacted is string
+        && request.resource.data.rawInputRedacted.size() <= 4000
+        && request.resource.data.structuredSummary is string
+        && request.resource.data.structuredSummary.size() <= 1000;
+
+      allow delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

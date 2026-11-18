@@ -3,6 +3,7 @@
 import {
   Activity,
   Cpu,
+  FlaskConical,
   Info,
   Layers,
   Radio,
@@ -49,15 +50,25 @@ export function TacticalHeader({
               <h1 className="text-lg font-bold tracking-tight text-slate-900">
                 ResQPulse AI
               </h1>
-              <span className="inline-flex items-center gap-1.5 rounded border border-blue-200 bg-blue-50 px-2 py-0.5 text-xs font-semibold text-[#1D4ED8]">
-                <Cpu className="h-3.5 w-3.5" aria-hidden="true" />
+              <span
+                className={`inline-flex items-center gap-1.5 rounded border px-2 py-0.5 text-xs font-semibold ${
+                  firebaseLiveConfigured
+                    ? 'border-blue-200 bg-[#EFF6FF] text-[#1D4ED8]'
+                    : 'border-amber-200 bg-[#FFFBEB] text-[#B45309]'
+                }`}
+              >
+                {firebaseLiveConfigured ? (
+                  <Cpu className="h-3.5 w-3.5" aria-hidden="true" />
+                ) : (
+                  <FlaskConical className="h-3.5 w-3.5" aria-hidden="true" />
+                )}
                 {firebaseLiveConfigured
-                  ? 'Firebase AI Logic Connected'
-                  : 'Hybrid AI Local Simulator'}
+                  ? 'Firebase AI Logic Live'
+                  : 'Local Simulator Active'}
               </span>
             </div>
             <p className="text-xs text-slate-600">
-              Mount Merapi &amp; Central Java Crisis Corridor | Unified Medical &amp; Disaster Triage
+              Mount Merapi &amp; Central Java response workspace for medical and disaster triage
             </p>
           </div>
         </div>
@@ -72,7 +83,7 @@ export function TacticalHeader({
               type="button"
               onClick={() => onChangeViewMode('SPLIT_SIMULATOR')}
               aria-pressed={viewMode === 'SPLIT_SIMULATOR'}
-              className={`inline-flex min-h-[40px] cursor-pointer items-center gap-1.5 rounded-md px-3 text-xs font-semibold transition-colors ${
+              className={`btn-tactile inline-flex min-h-[40px] cursor-pointer items-center gap-1.5 rounded-md px-3 text-xs font-semibold ${
                 viewMode === 'SPLIT_SIMULATOR'
                   ? 'bg-[#1E40AF] text-white'
                   : 'text-slate-700 hover:bg-slate-200'
@@ -85,7 +96,7 @@ export function TacticalHeader({
               type="button"
               onClick={() => onChangeViewMode('FIELD_RESPONDER')}
               aria-pressed={viewMode === 'FIELD_RESPONDER'}
-              className={`inline-flex min-h-[40px] cursor-pointer items-center gap-1.5 rounded-md px-3 text-xs font-semibold transition-colors ${
+              className={`btn-tactile inline-flex min-h-[40px] cursor-pointer items-center gap-1.5 rounded-md px-3 text-xs font-semibold ${
                 viewMode === 'FIELD_RESPONDER'
                   ? 'bg-[#1E40AF] text-white'
                   : 'text-slate-700 hover:bg-slate-200'
@@ -98,7 +109,7 @@ export function TacticalHeader({
               type="button"
               onClick={() => onChangeViewMode('COMMAND_CENTER')}
               aria-pressed={viewMode === 'COMMAND_CENTER'}
-              className={`inline-flex min-h-[40px] cursor-pointer items-center gap-1.5 rounded-md px-3 text-xs font-semibold transition-colors ${
+              className={`btn-tactile inline-flex min-h-[40px] cursor-pointer items-center gap-1.5 rounded-md px-3 text-xs font-semibold ${
                 viewMode === 'COMMAND_CENTER'
                   ? 'bg-[#1E40AF] text-white'
                   : 'text-slate-700 hover:bg-slate-200'
@@ -113,9 +124,9 @@ export function TacticalHeader({
             type="button"
             onClick={onToggleOnline}
             aria-pressed={!isOnline}
-            className={`inline-flex min-h-[48px] cursor-pointer items-center gap-2 rounded-lg border px-3.5 text-xs font-bold transition-colors ${
+            className={`btn-tactile inline-flex min-h-[48px] cursor-pointer items-center gap-2 rounded-lg border px-3.5 text-xs font-bold ${
               isOnline
-                ? 'border-emerald-300 bg-emerald-50 text-[#15803D] hover:bg-emerald-100'
+                ? 'border-emerald-300 bg-[#F0FDF4] text-[#15803D] hover:bg-emerald-100'
                 : 'border-red-300 bg-red-50 text-[#B91C1C] hover:bg-red-100'
             }`}
           >
@@ -124,7 +135,7 @@ export function TacticalHeader({
             ) : (
               <WifiOff className="h-4 w-4" aria-hidden="true" />
             )}
-            <span>{isOnline ? 'Signal: ONLINE (4G/Sat)' : 'Signal: OFFLINE (Blackout)'}</span>
+            <span>{isOnline ? 'Signal: Online (4G/Sat)' : 'Signal: Offline (Blackout)'}</span>
           </button>
 
           <div className="flex flex-col">
@@ -147,14 +158,14 @@ export function TacticalHeader({
 
           <div className="hidden items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs xl:flex">
             <div>
-              <span className="text-slate-500">Reports:</span>{' '}
+              <span className="text-slate-600">Reports:</span>{' '}
               <strong className="font-mono tabular-nums text-slate-900">
                 {totalIncidents}
               </strong>
             </div>
             <div className="h-4 w-px bg-slate-300" aria-hidden="true" />
             <div>
-              <span className="text-slate-500">Offline Queue:</span>{' '}
+              <span className="text-slate-600">Offline Queue:</span>{' '}
               <strong
                 className={`font-mono tabular-nums ${
                   queuedCount > 0 ? 'text-[#B45309]' : 'text-[#15803D]'
@@ -168,7 +179,7 @@ export function TacticalHeader({
           <button
             type="button"
             onClick={onOpenArchitectureModal}
-            className="inline-flex min-h-[48px] cursor-pointer items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-800 hover:bg-slate-100"
+            className="btn-tactile inline-flex min-h-[48px] cursor-pointer items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-800 hover:bg-slate-100"
           >
             <Info className="h-4 w-4 text-[#1E40AF]" aria-hidden="true" />
             Hybrid SDK Guide

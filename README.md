@@ -10,23 +10,26 @@ Built for **Google Firebase #BuildHybridAI 2026**.
 
 During acute disasters such as volcanic eruptions, flash floods, and landslides, cellular networks frequently drop or operate intermittently. First responders, paramedics, and local coordinators still need structured triage, immediate medical guidance, and strict patient privacy protection even when internet connectivity is completely unavailable.
 
-## How Hybrid AI (`firebase/ai`) Solves It
+## Honest Hybrid Telemetry (`ON_DEVICE` vs `IN_CLOUD` vs `SIMULATED`)
 
-ResQPulse AI divides AI responsibilities between **On-Device Gemini Nano** and **Cloud Gemini Flash** through the official **Firebase AI Logic Web SDK (`firebase/ai`)**:
+ResQPulse AI divides responsibilities across three transparent execution paths through the official **Firebase AI Logic Web SDK (`firebase/ai`)**:
 
-1. **`InferenceMode.ONLY_ON_DEVICE` (Local Privacy Guard):**
-   - Automatically scrubs sensitive PII (16-digit national IDs, phone numbers, and patient names) locally in the browser before storage or cloud transmission.
-2. **`InferenceMode.PREFER_ON_DEVICE` (Offline Field Triage + Cloud Fallback):**
-   - Classifies chaotic field notes into `MEDICAL`, `INFRASTRUCTURE`, `EVACUATION_SOS`, or `LOGISTICS`, assigns urgency scores (`1-10`), detects road closures, and generates offline first-aid/action checklists.
-   - Executes locally on Gemini Nano with zero network latency when supported, and falls back to Cloud Gemini Flash on standard hardware when online.
-3. **`InferenceMode.ONLY_IN_CLOUD` (Command Center Multimodal & SitRep):**
-   - Analyzes field camera snapshots (collapsed bridges, flooded triage bays) and synthesizes a multi-sector **Priority Dispatch Plan** and **Route Hazard Warnings** using `gemini-2.5-flash`.
-4. **Offline-First Persistence (`firebase/firestore`):**
-   - Uses `persistentLocalCache` (`IndexedDB`) and an offline sync queue so field reports captured during signal blackouts sync automatically once connectivity returns.
+1. **`ON_DEVICE` (`InferenceMode.ONLY_ON_DEVICE` / `PREFER_ON_DEVICE`):**
+   - Locally scrubs sensitive victim PII (16-digit National ID / NIK, phone numbers, and patient names) before persistence or cloud transmission.
+   - Runs structured field triage locally via Chrome Built-in AI (**Gemini Nano**) when browser flags are enabled, returning `result.response.inferenceSource === 'on_device'`.
+2. **`IN_CLOUD` (`InferenceMode.PREFER_ON_DEVICE` fallback / `ONLY_IN_CLOUD`):**
+   - Automatically falls back to cloud Gemini models (`gemini-3.5-flash-lite` by default, configurable via `NEXT_PUBLIC_FIREBASE_CLOUD_MODEL`) on unsupported hardware when online.
+   - Escalates redacted disaster photos and multi-sector field feeds for structural damage assessment and dispatch planning.
+3. **`SIMULATED` (Transparent Local Fallback):**
+   - When `.env.local` has no live Firebase credentials or an offline browser lacks Chrome Gemini Nano flags, ResQPulse AI executes its deterministic local classifier and explicitly badges the output **`SIMULATED`** with real elapsed latency rather than masking simulated output as live Gemini inference.
+
+> **Demo Dataset Note:** Pre-loaded Mount Merapi crisis exercise reports (`INC-2026-101` to `INC-2026-103`) are synthetic demonstration data. Use the **Reset Demo Data** button in the top notice bar anytime to restore the initial exercise state.
 
 ---
 
-## Quick Start
+## Local Setup & Live Firebase Activation
+
+### 1. Run Locally (Zero-Config Simulator Mode)
 
 ```bash
 npm install
@@ -36,21 +39,31 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-- **Local Hybrid Simulator Mode:** Works out of the box even before adding Firebase credentials to `.env.local`.
-- **Live Firebase Project Mode:** Fill `NEXT_PUBLIC_FIREBASE_*` keys in `.env.local` from your Firebase Console (with Firebase AI Logic & Cloud Firestore enabled) and restart the dev server.
+### 2. Connect Your Firebase Project (Live Hybrid AI + Firestore)
 
-### Verification
+1. Create a project in [Firebase Console](https://console.firebase.google.com/) and register a **Web App**.
+2. Enable **Firebase AI Logic** (Gemini Developer API backend), **Authentication -> Sign-in method -> Anonymous**, and **Cloud Firestore**.
+3. Copy your Web App keys into `.env.local`.
+4. To test real **On-Device Gemini Nano** inference in Chrome Desktop:
+   - Open `chrome://flags/#optimization-guide-on-device-model` and set it to **Enabled BypassPerfRequirement**.
+   - Open `chrome://flags/#prompt-api-for-gemini-nano` and set it to **Enabled**.
+   - Relaunch Chrome.
+
+### 3. Build & Deploy to Firebase Hosting
 
 ```bash
-npm run verify
 npx tsc --noEmit
+npm run verify
 npm run build
+npx firebase-tools login
+npx firebase-tools use --add
+npx firebase-tools deploy --only hosting,firestore:rules
 ```
 
 ---
 
 ## 3-Minute Demo Flow
 
-1. **Offline Blackout Intake (`ON_DEVICE`):** Toggle **Signal: OFFLINE (Blackout)** in the top bar, click the **Medical + PII** preset, and submit. Observe PII redaction (`[NIK_REDACTED]`, `[PHONE_REDACTED]`, `[NAME_REDACTED]`), `ON_DEVICE` inference badge, and `QUEUED_OFFLINE` status.
-2. **Multi-Sector Offline Queue:** Submit **Bridge Collapse** and **Rooftop SOS** presets while offline; watch markers appear immediately on the local Tactical Map.
-3. **Reconnect & Cloud Escalation (`IN_CLOUD`):** Switch back to **Signal: ONLINE**, click **Sync Queued Reports Now**, trigger **Analyze Photo (Cloud Flash)** on the bridge report, and run **Generate Multi-Sector Operation Plan** to route ambulances around blocked crossings.
+1. **Offline Blackout Intake:** Toggle **Signal: Offline (Blackout)** in the top bar, pick the **Medical + PII** preset, and submit. Verify local PII scrubbing (`[NIK_REDACTED]`, `[PHONE_REDACTED]`, `[NAME_REDACTED]`) and `QUEUED_OFFLINE` persistence.
+2. **Multi-Sector Offline Queue:** Submit **Bridge Collapse** and **Rooftop SOS** presets while offline; markers appear immediately on the Leaflet Tactical Map.
+3. **Reconnect & Cloud Escalation:** Switch back to **Signal: Online (4G/Sat)**, click **Sync Queued Reports Now**, trigger **Analyze Photo** on a bridge report, and run **Generate Multi-Sector Operation Plan** to route ambulances around blocked crossings.
