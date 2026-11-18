@@ -58,9 +58,9 @@ export function getFirebaseApp(): FirebaseApp | null {
     process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY
   ) {
     const provider =
-      process.env.NEXT_PUBLIC_RECAPTCHA_PROVIDER === 'enterprise'
-        ? new ReCaptchaEnterpriseProvider(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY)
-        : new ReCaptchaV3Provider(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY);
+      process.env.NEXT_PUBLIC_RECAPTCHA_PROVIDER === 'v3'
+        ? new ReCaptchaV3Provider(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY)
+        : new ReCaptchaEnterpriseProvider(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY);
 
     initializeAppCheck(cachedApp, {
       provider,
