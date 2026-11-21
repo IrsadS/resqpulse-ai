@@ -11,7 +11,11 @@ import {
   Wifi,
   WifiOff,
 } from 'lucide-react';
-import type { InferenceModeSetting, WorkspaceViewMode } from '@/types/incident';
+import type {
+  InferenceModeSetting,
+  OnDeviceAvailabilityState,
+  WorkspaceViewMode,
+} from '@/types/incident';
 
 interface TacticalHeaderProps {
   viewMode: WorkspaceViewMode;
@@ -21,10 +25,37 @@ interface TacticalHeaderProps {
   inferenceMode: InferenceModeSetting;
   onChangeInferenceMode: (mode: InferenceModeSetting) => void;
   firebaseLiveConfigured: boolean;
+  onDeviceAvailability: OnDeviceAvailabilityState;
   totalIncidents: number;
   queuedCount: number;
   onOpenArchitectureModal: () => void;
 }
+
+const NANO_STATUS_BADGE: Record<
+  OnDeviceAvailabilityState,
+  { label: string; className: string }
+> = {
+  CHECKING: {
+    label: 'Nano: Checking',
+    className: 'border-slate-200 bg-slate-100 text-slate-700',
+  },
+  AVAILABLE: {
+    label: 'Nano: Ready',
+    className: 'border-emerald-200 bg-[#F0FDF4] text-[#15803D]',
+  },
+  DOWNLOADING: {
+    label: 'Nano: Downloading',
+    className: 'border-amber-200 bg-[#FFFBEB] text-[#B45309]',
+  },
+  DOWNLOADABLE: {
+    label: 'Nano: Downloadable',
+    className: 'border-amber-200 bg-[#FFFBEB] text-[#B45309]',
+  },
+  UNAVAILABLE: {
+    label: 'Nano: Cloud Fallback',
+    className: 'border-slate-200 bg-slate-100 text-slate-700',
+  },
+};
 
 export function TacticalHeader({
   viewMode,
@@ -34,10 +65,12 @@ export function TacticalHeader({
   inferenceMode,
   onChangeInferenceMode,
   firebaseLiveConfigured,
+  onDeviceAvailability,
   totalIncidents,
   queuedCount,
   onOpenArchitectureModal,
 }: TacticalHeaderProps) {
+  const nanoBadge = NANO_STATUS_BADGE[onDeviceAvailability];
   return (
     <header className="border-b border-slate-200 bg-white">
       <div className="mx-auto flex max-w-[1600px] flex-col gap-3 px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
@@ -65,6 +98,11 @@ export function TacticalHeader({
                 {firebaseLiveConfigured
                   ? 'Firebase AI Logic Live'
                   : 'Local Simulator Active'}
+              </span>
+              <span
+                className={`inline-flex items-center rounded border px-2 py-0.5 font-mono text-xs font-semibold ${nanoBadge.className}`}
+              >
+                {nanoBadge.label}
               </span>
             </div>
             <p className="text-xs text-slate-600">

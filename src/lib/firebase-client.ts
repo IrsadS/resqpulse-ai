@@ -9,8 +9,12 @@ import {
   collection,
   doc,
   initializeFirestore,
+  limit,
+  onSnapshot,
+  orderBy,
   persistentLocalCache,
   persistentMultipleTabManager,
+  query,
   setDoc,
   type Firestore,
 } from 'firebase/firestore';
@@ -135,4 +139,39 @@ export async function persistIncidentToFirestore(
     syncStatus: 'SYNCED_FIRESTORE',
   });
   return true;
+}
+
+export function subscribeToIncidents(
+  onIncidents: (items: IncidentReport[]) => void
+): () => void {
+  const db = getFirestoreDb();
+  if (!db) {
+    return () => {};
+  }
+
+  const incidentsQuery = query(
+    collection(db, 'incidents'),
+    orderBy('createdAtIso', 'desc'),
+    limit(25)
+  );
+
+  return onSnapshot(
+    incidentsQuery,
+    (snapshot) => {
+      const items: IncidentReport[] = [];
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data() as IncidentReport;
+        if (data && data.id && data.category) {
+          items.push({
+            ...data,
+            syncStatus: 'SYNCED_FIRESTORE',
+          });
+        }
+      });
+      onIncidents(items);
+    },
+    () => {
+      // Snapshot errors (e.g., offline or awaiting auth) fall back to local cache gracefully.
+    }
+  );
 }

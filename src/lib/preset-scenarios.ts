@@ -275,3 +275,46 @@ export function generateSimulatedFieldPhoto(
 
   return canvas.toDataURL('image/jpeg', 0.85);
 }
+
+export async function compressImageFileToDataUrl(
+  file: File,
+  maxDimension = 800,
+  quality = 0.72
+): Promise<string> {
+  if (!file.type.startsWith('image/')) {
+    throw new Error('Unsupported file format. Upload a JPG, PNG, or WebP image.');
+  }
+
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Failed to read image file.'));
+    reader.onload = () => {
+      const result = reader.result;
+      if (typeof result !== 'string') {
+        reject(new Error('Invalid image encoding.'));
+        return;
+      }
+
+      const img = new Image();
+      img.onerror = () => reject(new Error('Could not decode uploaded image.'));
+      img.onload = () => {
+        const scale = Math.min(1, maxDimension / Math.max(img.width, img.height));
+        const width = Math.max(1, Math.round(img.width * scale));
+        const height = Math.max(1, Math.round(img.height * scale));
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(result);
+          return;
+        }
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = result;
+    };
+    reader.readAsDataURL(file);
+  });
+}

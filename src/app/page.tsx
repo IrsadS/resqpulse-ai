@@ -10,11 +10,14 @@ import {
   ensureAnonymousSession,
   isFirebaseConfigured,
   persistIncidentToFirestore,
+  subscribeToIncidents,
 } from '@/lib/firebase-client';
+import { detectOnDeviceCapability } from '@/lib/hybrid-ai-engine';
 import { INITIAL_INCIDENTS } from '@/lib/preset-scenarios';
 import type {
   IncidentReport,
   InferenceModeSetting,
+  OnDeviceAvailabilityState,
   WorkspaceViewMode,
 } from '@/types/incident';
 
@@ -28,13 +31,14 @@ export default function HomePage() {
   const [incidents, setIncidents] = useState<IncidentReport[]>(INITIAL_INCIDENTS);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [firebaseLiveConfigured, setFirebaseLiveConfigured] = useState(false);
+  const [onDeviceAvailability, setOnDeviceAvailability] =
+    useState<OnDeviceAvailabilityState>('CHECKING');
 
   useEffect(() => {
     const configured = isFirebaseConfigured();
     setFirebaseLiveConfigured(configured);
-    if (configured) {
-      void ensureAnonymousSession();
-    }
+
+    void detectOnDeviceCapability().then(setOnDeviceAvailability);
 
     try {
       const saved = window.localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -48,6 +52,29 @@ export default function HomePage() {
       // Ignore invalid local storage state and keep default synthetic dataset.
     }
 
+    let unsubscribeFirestore = () => {};
+    if (configured) {
+      void ensureAnonymousSession().then(() => {
+        unsubscribeFirestore = subscribeToIncidents((remoteItems) => {
+          if (remoteItems.length === 0) return;
+          setIncidents((prev) => {
+            const byId = new Map<string, IncidentReport>();
+            remoteItems.forEach((item) => byId.set(item.id, item));
+            prev.forEach((item) => {
+              if (!byId.has(item.id) && (item.syncStatus === 'QUEUED_OFFLINE' || item.isSyntheticSample)) {
+                byId.set(item.id, item);
+              }
+            });
+            const merged = Array.from(byId.values()).sort((a, b) =>
+              b.createdAtIso.localeCompare(a.createdAtIso)
+            );
+            saveLocalCache(merged);
+            return merged;
+          });
+        });
+      });
+    }
+
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
     window.addEventListener('online', handleOnline);
@@ -58,6 +85,7 @@ export default function HomePage() {
     }
 
     return () => {
+      unsubscribeFirestore();
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
@@ -102,6 +130,11 @@ export default function HomePage() {
       saveLocalCache(next);
       return next;
     });
+    if (isOnline && isFirebaseConfigured()) {
+      void persistIncidentToFirestore(updated).catch(() => {
+        // Keep local assessment if Firestore sync is temporarily unavailable.
+      });
+    }
   }
 
   async function handleSyncQueuedReports() {
@@ -139,6 +172,7 @@ export default function HomePage() {
         inferenceMode={inferenceMode}
         onChangeInferenceMode={setInferenceMode}
         firebaseLiveConfigured={firebaseLiveConfigured}
+        onDeviceAvailability={onDeviceAvailability}
         totalIncidents={incidents.length}
         queuedCount={queuedCount}
         onOpenArchitectureModal={() => setIsModalOpen(true)}

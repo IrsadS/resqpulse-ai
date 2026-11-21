@@ -16,6 +16,7 @@ import { InferenceSourceBadge } from '@/components/InferenceSourceBadge';
 import { analyzeFieldReportHybrid } from '@/lib/hybrid-ai-engine';
 import { redactSensitivePii } from '@/lib/pii-scrubber';
 import {
+  compressImageFileToDataUrl,
   generateSimulatedFieldPhoto,
   MERAPI_SECTORS,
   RESPONDER_PRESETS,
@@ -143,16 +144,18 @@ export function FieldResponderPanel({
     }
   }
 
-  function handleFileUpload(event: ChangeEvent<HTMLInputElement>) {
+  async function handleFileUpload(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        setPhotoDataUrl(reader.result);
-      }
-    };
-    reader.readAsDataURL(file);
+    setSubmitError(null);
+    try {
+      const compressed = await compressImageFileToDataUrl(file);
+      setPhotoDataUrl(compressed);
+    } catch (error) {
+      setSubmitError(
+        error instanceof Error ? error.message : 'Failed to compress uploaded image.'
+      );
+    }
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {

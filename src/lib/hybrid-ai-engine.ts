@@ -13,6 +13,7 @@ import type {
   IncidentReport,
   InferenceModeSetting,
   InferenceSourceType,
+  OnDeviceAvailabilityState,
   RoadAccessStatus,
   TriageSeverity,
 } from '@/types/incident';
@@ -41,6 +42,32 @@ interface StructuredTriagePayload {
 
 const DEFAULT_CLOUD_MODEL =
   process.env.NEXT_PUBLIC_FIREBASE_CLOUD_MODEL || 'gemini-3.5-flash-lite';
+
+export async function detectOnDeviceCapability(): Promise<OnDeviceAvailabilityState> {
+  if (typeof window === 'undefined') {
+    return 'UNAVAILABLE';
+  }
+
+  const lm = (
+    window as unknown as {
+      LanguageModel?: { availability?: () => Promise<string> };
+    }
+  ).LanguageModel;
+
+  if (!lm || typeof lm.availability !== 'function') {
+    return 'UNAVAILABLE';
+  }
+
+  try {
+    const status = await lm.availability();
+    if (status === 'available') return 'AVAILABLE';
+    if (status === 'downloadable') return 'DOWNLOADABLE';
+    if (status === 'downloading') return 'DOWNLOADING';
+    return 'UNAVAILABLE';
+  } catch {
+    return 'UNAVAILABLE';
+  }
+}
 
 function toSdkInferenceMode(mode: InferenceModeSetting): InferenceMode {
   if (mode === 'ONLY_ON_DEVICE') return InferenceMode.ONLY_ON_DEVICE;

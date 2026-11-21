@@ -5,6 +5,12 @@ export type InferenceModeSetting = 'PREFER_ON_DEVICE' | 'ONLY_ON_DEVICE' | 'ONLY
 export type RoadAccessStatus = 'OPEN' | 'RESTRICTED' | 'BLOCKED';
 export type SyncState = 'SYNCED_FIRESTORE' | 'QUEUED_OFFLINE';
 export type WorkspaceViewMode = 'SPLIT_SIMULATOR' | 'FIELD_RESPONDER' | 'COMMAND_CENTER';
+export type OnDeviceAvailabilityState =
+  | 'CHECKING'
+  | 'AVAILABLE'
+  | 'DOWNLOADABLE'
+  | 'DOWNLOADING'
+  | 'UNAVAILABLE';
 
 export interface IncidentReport {
   id: string;
