@@ -102,13 +102,13 @@ export function HybridArchitectureModal({
             </div>
             <ol className="list-decimal space-y-1 pl-4">
               <li>
-                Open <code>chrome://flags/#optimization-guide-on-device-model</code> and set to <strong>Enabled BypassPerfRequirement</strong>.
+                Open <code>chrome://flags/#prompt-api</code> and set to <strong>Enabled Multilingual</strong> (or <strong>Enabled</strong>), then relaunch Chrome.
               </li>
               <li>
-                Open <code>chrome://flags/#prompt-api-for-gemini-nano</code> and set to <strong>Enabled</strong>, then relaunch Chrome.
+                On older Chrome builds, also enable <code>#optimization-guide-on-device-model</code> (<strong>Enabled BypassPerfRequirement</strong>) and <code>#prompt-api-for-gemini-nano</code>.
               </li>
               <li>
-                Fill <code>.env.local</code> with your Firebase Web SDK keys (with Firebase AI Logic, Anonymous Auth, and Firestore enabled).
+                If the header shows <strong>Nano: Downloadable</strong>, stay online, pick <strong>Mode: ONLY_ON_DEVICE</strong>, and submit one report to trigger the local model download (monitor progress at <code>chrome://on-device-internals</code>).
               </li>
             </ol>
           </div>

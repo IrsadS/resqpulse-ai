@@ -45,9 +45,8 @@ Open [http://localhost:3000](http://localhost:3000).
 2. Enable **Firebase AI Logic** (Gemini Developer API backend), **Authentication -> Sign-in method -> Anonymous**, and **Cloud Firestore**.
 3. Copy your Web App keys into `.env.local`.
 4. To test real **On-Device Gemini Nano** inference in Chrome Desktop:
-   - Open `chrome://flags/#optimization-guide-on-device-model` and set it to **Enabled BypassPerfRequirement**.
-   - Open `chrome://flags/#prompt-api-for-gemini-nano` and set it to **Enabled**.
-   - Relaunch Chrome.
+   - Open `chrome://flags/#prompt-api` and set it to **Enabled Multilingual** (or **Enabled**), then relaunch Chrome. (On older Chrome builds, enable `#optimization-guide-on-device-model` and `#prompt-api-for-gemini-nano`.)
+   - If the header badge shows **Nano: Downloadable**, stay online, select **Mode: ONLY_ON_DEVICE**, and submit one report to trigger the Gemini Nano download (check progress at `chrome://on-device-internals`).
 
 ### 3. Build & Deploy to Firebase Hosting
 
